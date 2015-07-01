@@ -1,0 +1,41 @@
+@import "fonts.css";
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  position: relative;
+  font-family: 'Roboto Condensed', Helvetica, Arial, sans-serif;
+  font-weight: 300;
+  background-color: #3f3f3f;
+  box-sizing: border-box;
+  min-height: 100%;
+}
+
+.title {
+    text-align: center;
+    color: #f3f3f3;
+}
+.container {
+    width: 100%;
+}
+
+canvas {
+    display: block;
+    margin: auto;
+    width: 1200px;
+    height: 700px;
+    background: dimgrey;
+}
+
+.debug {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 250px;
+    background: whitesmoke;
+}
