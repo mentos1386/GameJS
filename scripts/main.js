@@ -11,7 +11,7 @@ function debug(){
     $('.ball-coordinates').html('ball x= '+ball.x+'; ball y= '+ball.y+';');
     $('.ball-direction').html('ball dx= '+ball.dx+'; ball dy= '+ball.dy+';');
     $('.pad-coordinates').html('pad x= '+pad.x+' - '+(pad.x+pad.width)+'; pad y= '+pad.y+' - '+(pad.y+pad.height)+';');
-    $('.blocks').html('Blocks Left = '+blocks.dead);
+    $('.blocks').html('Blocks Left = '+(blocks.count-blocks.dead));
 
 }
 
@@ -33,7 +33,7 @@ function Block(x, y, color, alive){
 function createBlocks(count){
     var rowCount = 1;
     for(var i = 0; i < count; i++){
-        var color = 'red';
+        var color = 'orange';
         var alive = true;
 
         if(i== 10*rowCount){
@@ -57,20 +57,20 @@ function createBlocks(count){
 
 function wallBorder(){
     // Left
-    if(ball.x <= 0){
+    if(ball.x-20 <= 0){
         ball.dx = -ball.dx;
     }
     // Right
-    if(ball.x >= ctx.canvas.width){
+    if(ball.x+20 >= ctx.canvas.width){
         ball.dx = -ball.dx;
     }
     // Top
-    if(ball.y <= 0){
+    if(ball.y-20 <= 0){
         ball.dy = -ball.dy;
     }
-    // Bottom
-    if(ball.y >= ctx.canvas.height){
-        alert('You lose :(');
+    // Bottom, you lose
+    if(ball.y+20 >= ctx.canvas.height){
+        ctx.game = 'lost';
     }
 
 }
@@ -167,49 +167,97 @@ function drawBall(ctx, x, y){
     ctx.fill();
 }
 
+function drawLost(){
+    ctx.font = '50px serif';
+    ctx.fillStyle = 'orange';
+    ctx.textAlign = 'center';
+    ctx.fillText('You lost :(', canvas.width/2, 250);
+    ctx.font = '20px serif';
+    ctx.fillText('Press ENTER to restart.', canvas.width/2, 450);
+}
+
+function drawWon(){
+    ctx.font = '50px serif';
+    ctx.fillStyle = 'orange';
+    ctx.textAlign = 'center';
+    ctx.fillText('You Won :)', canvas.width/2, 250);
+    ctx.font = '20px serif';
+    ctx.fillText('Press ENTER to restart.', canvas.width/2, 450);
+}
+
 function drawScene(){
 
     clear();
 
-    // Display Blocks
-    for(var i = 0; i < blocks.length; i++){
-        if(blocks[i].alive){
-            drawBlock(ctx, blocks[i].x, blocks[i].y, blocks[i].color);
+    if(ctx.game == 'play'){
+        // Display Blocks
+        for(var i = 0; i < blocks.length; i++){
+            if(blocks[i].alive){
+                drawBlock(ctx, blocks[i].x, blocks[i].y, blocks[i].color);
+            }
         }
-    }
-    // Check how many blocks are destroyed
-    blocks.dead = 0;
-    for(var i = 0; i < blocks.length; i++){
-        if(!blocks[i].alive){
-            blocks.dead ++;
+        // Check how many blocks are destroyed
+        blocks.dead = 0;
+        for(var i = 0; i < blocks.length; i++){
+            if(!blocks[i].alive){
+                blocks.dead ++;
+            }
         }
+        // If all blocks are destroyed end game (Win)
+        if(blocks.dead == blocks.length){
+            ctx.game = 'won';
+        }
+
+        // Display Pad
+        drawPad(ctx, pad.x, pad.y);
+
+        // Display Ball
+        drawBall(ctx, ball.x, ball.y);
+
+        // Move Ball
+        ball.x += ball.dx;
+        ball.y += ball.dy;
+
+        // Restrict Ball
+        wallBorder();
+        padBorder();
+        blocksBorder();
+
+        debug();
     }
-    // If all blocks are destroyed end game (Win)
-    if(blocks.dead == blocks.length){
-        alert('You win :)');
+    else if(ctx.game == 'lost'){
+        drawLost();
     }
-
-
-    // Display Pad
-    drawPad(ctx, pad.x, pad.y);
-
-    // Display Ball
-    drawBall(ctx, ball.x, ball.y);
-
-    // Move Ball
-    ball.x += ball.dx;
-    ball.y += ball.dy;
-
-    // Restrict Ball
-    wallBorder();
-    padBorder();
-    blocksBorder();
-
-    debug();
+    else if(ctx.game == 'won'){
+        drawWon();
+    }
 }
 
 // -------------------------------------
 // Initialization
+
+function resetGame(){
+
+    // Remove blocks
+    //blocks = []; // Only remove array
+
+    // Create new blocks
+    createBlocks(blocks.count);
+
+    // Pad sizing and positioning
+    pad.width = 200;
+    pad.height = 25;
+    pad.x = (ctx.canvas.width/2)-100;
+    pad.y = ctx.canvas.height-50;
+
+    // Ball positioning
+    ball.x = ctx.canvas.width/2;
+    ball.y = ctx.canvas.height-100;
+
+    // Directional movement
+    ball.dx = 0;
+    ball.dy = -10;
+}
 
 $(function(){
     canvas = document.getElementById('game');
@@ -218,21 +266,10 @@ $(function(){
     ctx.canvas.width  = 1200;
     ctx.canvas.height = 700;
 
-    var width = ctx.canvas.width;
-    var height = ctx.canvas.height;
-
     // Blocks sizing and positioning
-    blocks.count = 30; // Default 40
-    blocks.width = (((width-10)/10)-10);
+    blocks.count = 30; // Default 30
+    blocks.width = (((ctx.canvas.width-10)/10)-10);
     blocks.height = 50;
-
-    createBlocks(blocks.count);
-
-    // Pad sizing and positioning
-    pad.width = 200;
-    pad.height = 25;
-    pad.x = (width/2)-100;
-    pad.y = height-50;
 
     // Pad moving
     $(document).keydown(function(e) {
@@ -252,19 +289,19 @@ $(function(){
                     pad.x = pad.x + 20;
                 }
                 break;
-            // Pause
-            case 27:
+            // Enter
+            case 13:
+                if(ctx.game == 'lost' || ctx.game == 'won'){
+                    ctx.game = 'play';
+                    resetGame();
+                }
                 break;
         }
     });
 
-    // Ball positioning
-    ball.x = width/2;
-    ball.y = height-100;
+    resetGame();
 
-    // Directional movement
-    ball.dx = 0;
-    ball.dy = -10;
+    ctx.game = 'play';
 
-    setInterval(drawScene, 30); // loop drawScene 30 Default
+    setInterval(drawScene, 30); // loop drawScene //30 Default
 });
