@@ -76,35 +76,70 @@ function wallBorder(){
 }
 
 function blocksBorder(){
+    var blocksHited = 0;
     for(var i = 0; i < blocks.count; i++){
         if(blocks[i].alive){
+            // Did we hit block?
+
             // Bottom
-            if((ball.x >= blocks[i].x && ball.x <= blocks[i].x+blocks.width) && (ball.y-20 == blocks[i].y+blocks.height)){
-                ball.dy = -ball.dy;
+            if((ball.y == blocks[i].y+blocks.height) && ((ball.x-20 >= blocks[i].x && ball.x-20 <= blocks[i].x+blocks.width) || (ball.x+20 >= blocks[i].x && ball.x+20 <= blocks[i].x+blocks.width))){
+                if(blocksHited == 0){
+                    // Ball bounces off
+                    ball.dy = -ball.dy;
+                }
+                // Mark block as destroyed
                 blocks[i].alive = false;
+                blocksHited++;
+            }
+            // Top
+            if((ball.y == blocks[i].y) && ((ball.x-20 >= blocks[i].x && ball.x-20 <= blocks[i].x+blocks.width) || (ball.x+20 >= blocks[i].x && ball.x+20 <= blocks[i].x+blocks.width))){
+                if(blocksHited == 0){
+                    // Ball bounces off
+                    ball.dy = -ball.dy;
+                }
+                // Mark block as destroyed
+                blocks[i].alive = false;
+                blocksHited++;
+            }
+            // Left
+            if(((ball.y-20 >= blocks[i].y && ball.y-20 <= blocks[i].y+blocks.height || (ball.y+20 >= blocks[i].y && ball.y+20 <= blocks[i].y+blocks.height)) && (ball.x == blocks[i].x))){
+                if(blocksHited == 0){
+                    // Ball bounces off
+                    ball.dx = -ball.dx;
+                }
+                // Mark block as destroyed
+                blocks[i].alive = false;
+                blocksHited++;
+            }
+            // Right
+            if(((ball.y-20 >= blocks[i].y && ball.y-20 <= blocks[i].y+blocks.height || (ball.y+20 >= blocks[i].y && ball.y+20 <= blocks[i].y+blocks.height)) && (ball.x == blocks[i].x+blocks.width))){
+                if(blocksHited == 0){
+                    // Ball bounces off
+                    ball.dx = -ball.dx;
+                }
+                // Mark block as destroyed
+                blocks[i].alive = false;
+                blocksHited++;
             }
         }
     }
 }
 
 function padBorder(){
-
-    var ballX = ball.x  ;
-    var ballY = ball.y + 10;
-
-    // Hit Pad TOP
-    if((ballX >= pad.x && ballX <= pad.x+pad.width) && (ballY == pad.y)){
+    // Hit Pad TOP-LEFT
+    if((ball.x >= pad.x && ball.x <= pad.x+pad.width/10 ) && (ball.y+20 == pad.y)){
+        ball.dx = -10;
         ball.dy = -ball.dy;
     }
-    // Hit Pad TOP-LEFT
-    if((ballX >= pad.x && ballX <= pad.x+pad.width/10) && (ballY == pad.y)){
-        ball.dx = -10;
-    }
     // Hit Pad TOP-RIGHT
-    if((ballX >= pad.x+pad.width-pad.width/10 && ballX <= pad.x+pad.width) && (ballY == pad.y)){
+    else if((ball.x >= pad.x+pad.width-pad.width/10 && ball.x <= pad.x+pad.width) && (ball.y+20 == pad.y)){
         ball.dx = 10;
+        ball.dy = -ball.dy;
     }
-
+    // Hit Pad TOP
+    else if((ball.x-20 >= pad.x && ball.x-20 <= pad.x+pad.width || ball.x+20 >= pad.x && ball.x+20 <= pad.x+pad.width) && (ball.y+20 == pad.y)){
+        ball.dy = -ball.dy;
+    }
 }
 
 // -------------------------------------
@@ -142,13 +177,14 @@ function drawScene(){
             drawBlock(ctx, blocks[i].x, blocks[i].y, blocks[i].color);
         }
     }
+    // Check how many blocks are destroyed
     blocks.dead = 0;
     for(var i = 0; i < blocks.length; i++){
         if(!blocks[i].alive){
             blocks.dead ++;
         }
     }
-    console.log(blocks.dead);
+    // If all blocks are destroyed end game (Win)
     if(blocks.dead == blocks.length){
         alert('You win :)');
     }
@@ -204,11 +240,17 @@ $(function(){
 
             // Left
             case 37:
-                pad.x = pad.x - 20;
+                // Check if we hit left corner
+                if(pad.x > 0){
+                    pad.x = pad.x - 20;
+                }
                 break;
             // Right
             case 39:
-                pad.x = pad.x + 20;
+                // Check if we hit right corner
+                if(pad.x+pad.width < ctx.canvas.width){
+                    pad.x = pad.x + 20;
+                }
                 break;
             // Pause
             case 27:
