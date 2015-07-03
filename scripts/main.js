@@ -239,7 +239,7 @@ function drawScene(){
 function resetGame(){
 
     // Remove blocks
-    //blocks = []; // Only remove array
+    blocks.splice([])
 
     // Create new blocks
     createBlocks(blocks.count);
