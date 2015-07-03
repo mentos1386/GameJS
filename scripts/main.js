@@ -11,6 +11,7 @@ function debug(){
     $('.ball-coordinates').html('ball x= '+ball.x+'; ball y= '+ball.y+';');
     $('.ball-direction').html('ball dx= '+ball.dx+'; ball dy= '+ball.dy+';');
     $('.pad-coordinates').html('pad x= '+pad.x+' - '+(pad.x+pad.width)+'; pad y= '+pad.y+' - '+(pad.y+pad.height)+';');
+    $('.blocks').html('Blocks Left = '+blocks.dead);
 
 }
 
@@ -39,13 +40,13 @@ function createBlocks(count){
             rowCount = rowCount +1;
         }
 
+        var y = rowCount * (blocks.height + 20);
+
         if(i == 0 || i == rowCount * 10 - 10){
             var x = 10;
-            var y = 1 * rowCount * (blocks.height + 20);
         }
         else if(i < 10*rowCount){
             var x = blocks[i-1].x+blocks.width+10;
-            var y = 1 * rowCount * (blocks.height + 20);
         }
         blocks.push(new Block(x,y, color, alive))
     }
@@ -69,21 +70,19 @@ function wallBorder(){
     }
     // Bottom
     if(ball.y >= ctx.canvas.height){
-        ball.dy = -ball.dy;
-
+        alert('You lose :(');
     }
 
 }
 
 function blocksBorder(){
-    var ballX = ball.x ;
-    var ballY = ball.y;
-
     for(var i = 0; i < blocks.count; i++){
-
-        // Bottom
-        if((ball.x >= blocks[i].x && ball.x <= blocks[i].x+blocks.width) && (ball.y-20 == blocks[i].y+blocks.height)){
-            ball.dy = -ball.dy;
+        if(blocks[i].alive){
+            // Bottom
+            if((ball.x >= blocks[i].x && ball.x <= blocks[i].x+blocks.width) && (ball.y-20 == blocks[i].y+blocks.height)){
+                ball.dy = -ball.dy;
+                blocks[i].alive = false;
+            }
         }
     }
 }
@@ -115,11 +114,9 @@ function clear(){
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 }
 
-function drawBlock(ctx, x, y, color, alive){
-    if(alive){
-        ctx.fillStyle = color;
-        ctx.fillRect(x, y, blocks.width, blocks.height);
-    }
+function drawBlock(ctx, x, y, color){
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, blocks.width, blocks.height);
 }
 
 function drawPad(ctx, x, y){
@@ -130,18 +127,32 @@ function drawPad(ctx, x, y){
 function drawBall(ctx, x, y){
     ctx.fillStyle = 'blue';
     ctx.beginPath();
-    ctx.arc(x, y, 20, 0, Math.PI*2, true)
+    ctx.arc(x, y, 20, 0, Math.PI*2, true);
     ctx.closePath();
     ctx.fill();
 }
 
 function drawScene(){
+
     clear();
 
     // Display Blocks
     for(var i = 0; i < blocks.length; i++){
-        drawBlock(ctx, blocks[i].x, blocks[i].y, blocks[i].color, blocks[i].alive);
+        if(blocks[i].alive){
+            drawBlock(ctx, blocks[i].x, blocks[i].y, blocks[i].color);
+        }
     }
+    blocks.dead = 0;
+    for(var i = 0; i < blocks.length; i++){
+        if(!blocks[i].alive){
+            blocks.dead ++;
+        }
+    }
+    console.log(blocks.dead);
+    if(blocks.dead == blocks.length){
+        alert('You win :)');
+    }
+
 
     // Display Pad
     drawPad(ctx, pad.x, pad.y);
@@ -175,7 +186,7 @@ $(function(){
     var height = ctx.canvas.height;
 
     // Blocks sizing and positioning
-    blocks.count = 30 // Default 40
+    blocks.count = 30; // Default 40
     blocks.width = (((width-10)/10)-10);
     blocks.height = 50;
 
